@@ -9,14 +9,16 @@ const SearchWeather = () => {
 
 	useEffect(() => {
 		const fetchWeather = async () => {
-			const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${search}&appid={06f6fd0366a5076ef6e468e8f2c08c21}`);
+			const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${search}&appid=06f6fd0366a5076ef6e468e8f2c08c21`);
 			if (componentMounted) {
 				setData(await response.json());
+				console.log(data);
 			}
 			return () => {
 				// eslint-disable-next-line react-hooks/exhaustive-deps
 				componentMounted = false;
 			}
+			
 		}
 		fetchWeather();
 	}, [search]);
@@ -48,9 +50,9 @@ const SearchWeather = () => {
 		)
 	}
 
-	let temp = (data.main.temp - 273.15).toFixed(2);
-	let temp_min = (data.main.temp_min - 273.15).toFixed(2);
-	let temp_max = (data.main.temp_max - 273.15).toFixed(2);
+	let temp = (data.main.temp - 273.15).toFixed(1);
+	let temp_min = (data.main.temp_min - 273.15).toFixed(1);
+	let temp_max = (data.main.temp_max - 273.15).toFixed(1);
 
 	// Date
 	let d = new Date();
@@ -76,16 +78,16 @@ const SearchWeather = () => {
 			<div className="container mt-5">
 				<div className="row justify-content-center">
 					<div className="col-md-4">
-						<div class="card text-white text-center border-0">
+						<div className="card text-white text-center border-0">
 							{/* eslint-disable-next-line jsx-a11y/img-redundant-alt */}
-							<img class="card-img" src={`https://source.unsplash.com/600x900/?${data.weather[0].main}`} alt="Card image" />
-							<div class="card-img-overlay">
+							<img className="card-img" src={`https://source.unsplash.com/600x900/?${data.weather[0].main}`} alt="Card image" />
+							<div className="card-img-overlay">
 
 								<form onSubmit={handleSubmit}>
-									<div class="input-group mb-4 w-75 mx-auto">
+									<div className="input-group mb-4 w-75 mx-auto">
 										<input
 											type="search"
-											class="form-control"
+											className="form-control"
 											placeholder="Search City"
 											aria-label="Search City"
 											aria-describedby="basic-addon2"
@@ -94,15 +96,15 @@ const SearchWeather = () => {
 											onChange={(e) => setInput(e.target.value)}
 											required
 										/>
-										<button type="submit" class="input-group-text" id="basic-addon2">
+										<button type="submit" className="input-group-text" id="basic-addon2">
 											<i className='fa fa-search'></i>
 										</button>
 									</div>
 								</form>
 
 								<div className="bg-dark bg-opacity-50 py-3">
-									<h2 class="card-title">{data.name}</h2>
-									<p class="card-text lead">
+									<h2 className="card-title">{data.name}</h2>
+									<p className="card-text lead">
 										{day}, {month} {date}, {year}
 										<br></br>
 										{time}
