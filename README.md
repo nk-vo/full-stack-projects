@@ -6,4 +6,5 @@ my collection of full stack projects
 <a href="https://www.youtube.com/channel/UCkRvlbw8ORh0Nb2k3_avz7Q">Quick Coding Tuts's Youtube</a><br>
 <a href="https://www.youtube.com/c/SimplilearnOfficial">SimpliLearn's Youtube</a><br>
 <a href="https://www.youtube.com/user/babaganoooosh">Adam La Morre's Youtube</a><br>
+<a href="https://www.youtube.com/c/TutorialsDev">Tutorials Dev's Youtube</a><br>
 
