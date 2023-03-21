@@ -6,10 +6,6 @@ import Summary from './components/Summary';
 import Highlight from './components/Highlight';
 import { Container, Typography } from '@material-ui/core';
 import '@fontsource/roboto';
-import moment from 'moment';
-import 'moment/locale/vi';
-
-moment.locale('vi');
 
 const App = () => {
   const [countries, setCountries] = React.useState([]);
@@ -67,12 +63,21 @@ const App = () => {
     return [];
   }, [report]);
 
+  const formattedDateTime = new Intl.DateTimeFormat('en-CA', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+  }).format(new Date());
+
   return (
     <Container style={{ marginTop: 20 }}>
       <Typography variant='h2' component='h2'>
         COVID-19 Statistic
       </Typography>
-      <Typography>{moment().format('LLL')}</Typography>
+      <Typography>{formattedDateTime}</Typography>
       <CountrySelector
         handleOnChange={handleOnChange}
         countries={countries}
