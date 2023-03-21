@@ -17,7 +17,7 @@ const App = () => {
       const { data } = res;
       const countries = sortBy(data, 'Country');
       setCountries(countries);
-      setSelectedCountryId('vn');
+      setSelectedCountryId('ca');
     });
   }, []);
 
