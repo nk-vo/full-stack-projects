@@ -12,7 +12,7 @@ const generateOptions = (data) => {
       height: 500,
     },
     title: {
-      text: 'Tổng ca nhiễm',
+      text: 'Total infected',
     },
     xAxis: {
       categories: categories,
@@ -45,7 +45,7 @@ const generateOptions = (data) => {
     },
     series: [
       {
-        name: 'Tổng Ca nhiễm',
+        name: 'Total infected',
         data: data.map((item) => item.Confirmed),
       },
     ],
@@ -92,19 +92,19 @@ export default function LineChart({ data }) {
           color={reportType === 'all' ? 'secondary' : ''}
           onClick={() => setReportType('all')}
         >
-          Tất cả
+          All
         </Button>
         <Button
           color={reportType === '30' ? 'secondary' : ''}
           onClick={() => setReportType('30')}
         >
-          30 ngày
+          30 days
         </Button>
         <Button
           color={reportType === '7' ? 'secondary' : ''}
           onClick={() => setReportType('7')}
         >
-          7 ngày
+          7 days
         </Button>
       </ButtonGroup>
       <HighchartsReact highcharts={Highcharts} options={options} />
