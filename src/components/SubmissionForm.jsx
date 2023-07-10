@@ -25,7 +25,7 @@ const AuthButton = ({ loggedIn, handleLogout, handleLogin }) => {
 
 const LookupForm = ({ handleLogout }) => {
   const [forms, setForms] = useState([]);
-  const [sortField, setSortField] = useState('');
+  const [sortField, setSortField] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
   const [employmentStatusFilter, setEmploymentStatusFilter] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('');
@@ -33,11 +33,9 @@ const LookupForm = ({ handleLogout }) => {
   useEffect(() => {
     const fetchForms = async () => {
       try {
-        let formsRef = firebase.firestore().collection('submissions');
+        let formsData = [];
 
-        if (sortField) {
-          formsRef = formsRef.orderBy(sortField, sortOrder);
-        }
+        let formsRef = firebase.firestore().collection('submissions');
 
         if (departmentFilter !== '') {
           formsRef = formsRef.where('department', '==', departmentFilter);
@@ -47,8 +45,40 @@ const LookupForm = ({ handleLogout }) => {
           formsRef = formsRef.where('employmentStatus', '==', employmentStatusFilter);
         }
 
+        // if (sortField && sortOrder) {
+        //   formsRef = formsRef.orderBy(sortField, sortOrder)
+        // }
+
+        // NOTE: Firebase doesn't support ordering by multiple fields in a single query
+
         const formsSnapshot = await formsRef.get();
-        const formsData = formsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        formsSnapshot.docs.forEach((doc) => {
+          formsData.push({ id: doc.id, ...doc.data() });
+        });
+
+        if (formsData.length === 0) {
+          // Generate random data if the forms collection is empty
+          for (let i = 0; i < 100; i++) {
+            const randomData = generateRandomData();
+            const docRef = await firebase.firestore().collection('submissions').add(randomData);
+            formsData.push({ id: docRef.id, ...randomData });
+          }
+        }
+
+         // Sort the forms based on the selected sortField and sortOrder
+         if (sortField !== '' && sortOrder !== '') {
+          formsData.sort((a, b) => {
+            const aValue = a[sortField];
+            const bValue = b[sortField];
+
+            if (sortOrder === 'asc') {
+              return aValue.localeCompare(bValue);
+            } else {
+              return bValue.localeCompare(aValue);
+            }
+          });
+        }
+
         setForms(formsData);
       } catch (error) {
         console.error('Error fetching forms:', error);
@@ -57,6 +87,22 @@ const LookupForm = ({ handleLogout }) => {
 
     fetchForms();
   }, [sortField, sortOrder, departmentFilter, employmentStatusFilter]);
+
+  const generateRandomData = () => {
+    const id = chance.natural({ min: 100000000, max: 999999999 }).toString();
+    const timestamp = chance.date({ year: 2022 });
+
+    return {
+      name: chance.name(),
+      id,
+      department: chance.pickone(['Sales', 'Marketing', 'Finance', 'Human Resources']),
+      employmentStatus: chance.pickone(['Full-time', 'Part-time', 'Contract', 'Intern']),
+      email: chance.email(),
+      accommodationRequest: chance.paragraph({ sentences: 2 }),
+      fileUrl: null,
+      timestamp,
+    };
+  };
 
   const handleSortFieldChange = (e) => {
     setSortField(e.target.value);
@@ -74,6 +120,23 @@ const LookupForm = ({ handleLogout }) => {
     setEmploymentStatusFilter(e.target.value);
   };
 
+  const renderFileLink = (fileUrl) => {
+    if (fileUrl) {
+      return (
+        <a href={fileUrl} target="_blank" rel="noopener noreferrer">
+          {getFileNameFromUrl(fileUrl)}
+        </a>
+      );
+    } else {
+      return 'None';
+    }
+  };
+
+  const getFileNameFromUrl = (fileUrl) => {
+    const splitUrl = fileUrl.split('/');
+    return splitUrl[splitUrl.length - 1];
+  };
+
   return (
     <div className="container">
       <h4 className="text-center mb-4">Lookup Form</h4>
@@ -89,6 +152,7 @@ const LookupForm = ({ handleLogout }) => {
         >
           <option value="name">Name</option>
           <option value="id">ID</option>
+          <option value="timestamp">Timestamp</option>
         </select>
       </div>
       <div className="mb-3">
@@ -142,34 +206,14 @@ const LookupForm = ({ handleLogout }) => {
       <table className="table mt-4">
         <thead>
           <tr>
-            <th>
-              Name
-              {sortField === 'name' && (
-                <span className="sort-icon">
-                  {sortOrder === 'asc' ? (
-                    <i className="fas fa-sort-up"></i>
-                  ) : (
-                    <i className="fas fa-sort-down"></i>
-                  )}
-                </span>
-              )}
-            </th>
-            <th>
-              ID
-              {sortField === 'id' && (
-                <span className="sort-icon">
-                  {sortOrder === 'asc' ? (
-                    <i className="fas fa-sort-up"></i>
-                  ) : (
-                    <i className="fas fa-sort-down"></i>
-                  )}
-                </span>
-              )}
-            </th>
+            <th>Name</th>
+            <th>ID</th>
             <th>Department</th>
             <th>Employment Status</th>
             <th>Email</th>
             <th>Accommodation Request</th>
+            <th>Uploaded File</th>
+            {/* <th>Timestamp</th> */}
           </tr>
         </thead>
         <tbody>
@@ -181,6 +225,8 @@ const LookupForm = ({ handleLogout }) => {
               <td>{form.employmentStatus}</td>
               <td>{form.email}</td>
               <td>{form.accommodationRequest}</td>
+              <td>{renderFileLink(form.fileUrl)}</td>
+              {/* <td>{form.timestamp.toDate().toLocaleString()}</td> */}
             </tr>
           ))}
         </tbody>
