@@ -25,10 +25,11 @@ const AuthButton = ({ loggedIn, handleLogout, handleLogin }) => {
 
 const LookupForm = ({ handleLogout }) => {
   const [forms, setForms] = useState([]);
-  const [sortField, setSortField] = useState('name');
+  const [sortField, setSortField] = useState('timestamp');
   const [sortOrder, setSortOrder] = useState('asc');
   const [employmentStatusFilter, setEmploymentStatusFilter] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const fetchForms = async () => {
@@ -65,19 +66,18 @@ const LookupForm = ({ handleLogout }) => {
           }
         }
 
-         // Sort the forms based on the selected sortField and sortOrder
-         if (sortField !== '' && sortOrder !== '') {
+        // Sort the forms based on the selected sortField and sortOrder
+        if (sortField !== '' && sortOrder !== '') {
           formsData.sort((a, b) => {
-            const aValue = a[sortField];
-            const bValue = b[sortField];
-
-            if (sortOrder === 'asc') {
-              return aValue.localeCompare(bValue);
+            if (sortField === 'timestamp') {
+              const timestampA = parseInt(a[sortField]);
+              const timestampB = parseInt(b[sortField]);
+              return sortOrder === 'asc' ? timestampA - timestampB : timestampB - timestampA;
             } else {
-              return bValue.localeCompare(aValue);
+              return sortOrder === 'asc' ? a[sortField].localeCompare(b[sortField]) : b[sortField].localeCompare(a[sortField]);
             }
           });
-        }
+        }        
 
         setForms(formsData);
       } catch (error) {
@@ -90,7 +90,7 @@ const LookupForm = ({ handleLogout }) => {
 
   const generateRandomData = () => {
     const id = chance.natural({ min: 100000000, max: 999999999 }).toString();
-    const timestamp = chance.date({ year: 2022 });
+    const timestamp = chance.date({ year: 2022 }).getTime().toString();
 
     return {
       name: chance.name(),
@@ -103,6 +103,22 @@ const LookupForm = ({ handleLogout }) => {
       timestamp,
     };
   };
+
+  const formatTimestamp = (timestamp) => {
+    const date = new Date(parseInt(timestamp));
+    const options = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      timeZone: 'America/Los_Angeles',
+      timeZoneName: 'short',
+    };
+    return date.toLocaleString('en-US', options);
+  };
+  
+  
 
   const handleSortFieldChange = (e) => {
     setSortField(e.target.value);
@@ -120,11 +136,29 @@ const LookupForm = ({ handleLogout }) => {
     setEmploymentStatusFilter(e.target.value);
   };
 
+  const handleSearchTermChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const filteredForms = forms.filter((form) => {
+    const { name, email, accommodationRequest } = form;
+    const lowerCaseSearchTerm = searchTerm.toLowerCase();
+
+    return (
+      name.toLowerCase().includes(lowerCaseSearchTerm) ||
+      email.toLowerCase().includes(lowerCaseSearchTerm) ||
+      accommodationRequest.toLowerCase().includes(lowerCaseSearchTerm)
+    );
+  });
+
   const renderFileLink = (fileUrl) => {
     if (fileUrl) {
+      const splitUrl = fileUrl.split('%2F');
+      const fileNameWithToken = splitUrl[splitUrl.length - 1];
+      const fileName = decodeURIComponent(fileNameWithToken.split('?')[0]);
       return (
-        <a href={fileUrl} target="_blank" rel="noopener noreferrer">
-          {getFileNameFromUrl(fileUrl)}
+        <a href={fileUrl} download={fileName} target="_blank" rel="noopener noreferrer">
+          Download
         </a>
       );
     } else {
@@ -132,77 +166,97 @@ const LookupForm = ({ handleLogout }) => {
     }
   };
 
-  const getFileNameFromUrl = (fileUrl) => {
-    const splitUrl = fileUrl.split('/');
-    return splitUrl[splitUrl.length - 1];
+
+  const highlightText = (text, searchTerm) => {
+    const regex = new RegExp(`(${searchTerm})`, 'gi');
+    if (!searchTerm || searchTerm === '') return text;
+    return text.replace(regex, '<mark>$1</mark>');
   };
+
 
   return (
     <div className="container">
       <h4 className="text-center mb-4">Lookup Form</h4>
-      <div className="mb-3">
-        <label htmlFor="sortField" className="form-label">
-          Order by:
-        </label>
-        <select
-          className="form-select"
-          id="sortField"
-          value={sortField}
-          onChange={handleSortFieldChange}
-        >
-          <option value="name">Name</option>
-          <option value="id">ID</option>
-          <option value="timestamp">Timestamp</option>
-        </select>
+      <div className="row mb-3">
+        <div className="col-md-6">
+          <label htmlFor="sortField" className="form-label">
+            Order by:
+          </label>
+          <select
+            className="form-select"
+            id="sortField"
+            value={sortField}
+            onChange={handleSortFieldChange}
+          >
+            <option value="name">Name</option>
+            <option value="id">ID</option>
+            <option value="timestamp">Timestamp</option>
+          </select>
+        </div>
+        <div className="col-md-6">
+          <label htmlFor="sortOrder" className="form-label">
+            Order:
+          </label>
+          <select
+            className="form-select"
+            id="sortOrder"
+            value={sortOrder}
+            onChange={handleSortOrderChange}
+          >
+            <option value="asc">Ascending</option>
+            <option value="desc">Descending</option>
+          </select>
+        </div>
+      </div>
+      <div className="row mb-3">
+        <div className="col-md-6">
+          <label htmlFor="departmentFilter" className="form-label">
+            Department Filter:
+          </label>
+          <select
+            className="form-select"
+            id="departmentFilter"
+            value={departmentFilter}
+            onChange={handleDepartmentFilterChange}
+          >
+            <option value="">All</option>
+            <option value="Sales">Sales</option>
+            <option value="Marketing">Marketing</option>
+            <option value="Finance">Finance</option>
+            <option value="Human Resources">Human Resources</option>
+          </select>
+        </div>
+        <div className="col-md-6">
+          <label htmlFor="employmentStatusFilter" className="form-label">
+            Employment Status Filter:
+          </label>
+          <select
+            className="form-select"
+            id="employmentStatusFilter"
+            value={employmentStatusFilter}
+            onChange={handleEmploymentStatusFilterChange}
+          >
+            <option value="">All</option>
+            <option value="Full-time">Full-time</option>
+            <option value="Part-time">Part-time</option>
+            <option value="Contract">Contract</option>
+            <option value="Intern">Intern</option>
+          </select>
+        </div>
       </div>
       <div className="mb-3">
-        <label htmlFor="sortOrder" className="form-label">
-          Order:
+        <label htmlFor="searchTerm" className="form-label">
+          Search:
         </label>
-        <select
-          className="form-select"
-          id="sortOrder"
-          value={sortOrder}
-          onChange={handleSortOrderChange}
-        >
-          <option value="asc">Ascending</option>
-          <option value="desc">Descending</option>
-        </select>
+        <input
+          type="text"
+          className="form-control"
+          id="searchTerm"
+          value={searchTerm}
+          onChange={handleSearchTermChange}
+        />
       </div>
-      <div className="mb-3">
-        <label htmlFor="departmentFilter" className="form-label">
-          Department Filter:
-        </label>
-        <select
-          className="form-select"
-          id="departmentFilter"
-          value={departmentFilter}
-          onChange={handleDepartmentFilterChange}
-        >
-          <option value="">All</option>
-          <option value="Sales">Sales</option>
-          <option value="Marketing">Marketing</option>
-          <option value="Finance">Finance</option>
-          <option value="Human Resources">Human Resources</option>
-        </select>
-      </div>
-      <div className="mb-3">
-        <label htmlFor="employmentStatusFilter" className="form-label">
-          Employment Status Filter:
-        </label>
-        <select
-          className="form-select"
-          id="employmentStatusFilter"
-          value={employmentStatusFilter}
-          onChange={handleEmploymentStatusFilterChange}
-        >
-          <option value="">All</option>
-          <option value="Full-time">Full-time</option>
-          <option value="Part-time">Part-time</option>
-          <option value="Contract">Contract</option>
-          <option value="Intern">Intern</option>
-        </select>
-      </div>
+
       <table className="table mt-4">
         <thead>
           <tr>
@@ -213,20 +267,20 @@ const LookupForm = ({ handleLogout }) => {
             <th>Email</th>
             <th>Accommodation Request</th>
             <th>Uploaded File</th>
-            {/* <th>Timestamp</th> */}
+            <th>Timestamp</th>
           </tr>
         </thead>
         <tbody>
-          {forms.map((form) => (
+          {filteredForms.map((form) => (
             <tr key={form.id}>
-              <td>{form.name}</td>
-              <td>{form.id}</td>
+              <td dangerouslySetInnerHTML={{ __html: highlightText(form.name, searchTerm) }}></td>
+              <td dangerouslySetInnerHTML={{ __html: highlightText(form.id, searchTerm) }}></td>
               <td>{form.department}</td>
               <td>{form.employmentStatus}</td>
-              <td>{form.email}</td>
-              <td>{form.accommodationRequest}</td>
+              <td dangerouslySetInnerHTML={{ __html: highlightText(form.email, searchTerm) }}></td>
+              <td dangerouslySetInnerHTML={{ __html: highlightText(form.accommodationRequest, searchTerm) }}></td>
               <td>{renderFileLink(form.fileUrl)}</td>
-              {/* <td>{form.timestamp.toDate().toLocaleString()}</td> */}
+              <td>{formatTimestamp(form.timestamp)}</td>
             </tr>
           ))}
         </tbody>
