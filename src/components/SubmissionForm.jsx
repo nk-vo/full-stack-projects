@@ -73,15 +73,11 @@ const LookupForm = ({ handleLogout }) => {
               const timestampA = parseInt(a[sortField]);
               const timestampB = parseInt(b[sortField]);
               return sortOrder === 'asc' ? timestampA - timestampB : timestampB - timestampA;
-            } else if (sortField === 'id') {
-              const idA = parseInt(a[sortField]);
-              const idB = parseInt(b[sortField]);
-              return sortOrder === 'asc' ? idA - idB : idB - idA;
             } else {
               return sortOrder === 'asc' ? a[sortField].localeCompare(b[sortField]) : b[sortField].localeCompare(a[sortField]);
             }
           });
-        }
+        }        
 
         setForms(formsData);
       } catch (error) {
