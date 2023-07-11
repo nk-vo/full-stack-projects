@@ -139,11 +139,12 @@ const LookupForm = ({ handleLogout }) => {
   };
 
   const filteredForms = forms.filter((form) => {
-    const { name, email, accommodationRequest } = form;
+    const { name, email, id, accommodationRequest } = form;
     const lowerCaseSearchTerm = searchTerm.toLowerCase();
 
     return (
       name.toLowerCase().includes(lowerCaseSearchTerm) ||
+      id.toLowerCase().includes(lowerCaseSearchTerm) ||
       email.toLowerCase().includes(lowerCaseSearchTerm) ||
       accommodationRequest.toLowerCase().includes(lowerCaseSearchTerm)
     );
